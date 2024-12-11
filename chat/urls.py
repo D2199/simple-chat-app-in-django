@@ -12,6 +12,7 @@ urlpatterns = [
     path('chat/<str:to>',views.chat,name='chat'),
     path('logout',views.logoutView,name='logout'),
 path('send/',views.addMsg,name='send'),
+path('getMsg/<str:to>',views.get_messages,name='get_message'),
 
     path('dashboard/',views.dashboard,name='dashboard')
 ]

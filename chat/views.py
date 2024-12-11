@@ -37,10 +37,33 @@ def chat(request,to):
         (Q(froms=request.user) & Q(to=recivers[0])) | 
         (Q(froms=recivers[0]) & Q(to=request.user))
     ).order_by('date')
-            print(messages[0].froms)
+            # print(messages[0].froms)
             # print(messages)
         return render(request,'chat.html',{'massages':[message for message in messages],'to':to})
      return redirect('login')
+
+def get_messages(request,to):
+    recivers = []  
+    if request.user.is_authenticated :
+        recivers=User.objects.filter(username=to)
+        if len(recivers) > 0:
+            messages = Message.objects.filter(
+                (Q(froms=request.user) & Q(to=recivers[0])) | 
+                (Q(froms=recivers[0]) & Q(to=request.user))
+            ).order_by('date')
+            
+            data = []
+            for message in messages:
+                data.append({
+                    'from': message.froms.username,
+                    'to': message.to.username,
+                    'message': message.value,
+                    'date': message.date
+                })
+            print(data)
+            return JsonResponse(data, safe=False)
+        else:
+            return JsonResponse({'error': 'No receivers found'}, status=404)
 
 def addMsg(request):
     if request.user.is_authenticated:
@@ -51,8 +74,6 @@ def addMsg(request):
             msg=Message(value=massage,froms=request.user,to=recivers[0])
             msg.save()
             print(massage)
-    
-   
 
     return HttpResponse({"success"})
 

@@ -5,36 +5,98 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat</title>
+    <style>
+        .msg {
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+            justify-content: center;
+            /* width: 100vw; */
+            text-align: center;
+        }
+
+        .sender {
+            font-weight: bold;
+            color: #00698f;
+            margin-bottom: 5px;
+        }
+
+        .value {
+            color: #666;
+            word-wrap: break-word;
+        }
+
+        .body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background-color: #666;
+        }
+    </style>
 </head>
 
 <body>
-    {{user}}->{{to}}<br>
+    <!-- {{user}}->{{to}}<br>
     {%for msg in massages%}
     {{msg.froms}}<br>
-<center>{{msg.value}}<br></center>
-    {%endfor%}
- 
-    <!-- <form action="send" onsubmit="onsubmit" method="post"></form>
-    {% csrf_token%}
-    <input type="text" name="massage" id="">
-    <input type="hidden" name="to" value="{{to}}">
-    <input type="submit" value="send">
-    </form> -->
-    <form method="POST" action="{% url 'send' %}" onsubmit="(e)=>onsubmit(e)">
+    <center>{{msg.value}}<br></center>
+    {%endfor%} -->
+    <div class="msgs"></div>
+    <form method="POST" action="{% url 'send' %}" onsubmit="submitHandler(event)">
         {%csrf_token%}
         <input type="text" name="massage">
         <input type="hidden" name="to" value="{{to}}">
-        <input type="submit" value="send">
+        <input type="submit" onclick="(e)=>console.log(e)" value="send">
     </form>
     <script>
-        // function onsubmit(e) {
-        //     e.preventDefault();
-        //     message=document.getElementsByName('message').values
-        //     to=document.getElementsByName('to').values
-             
+        let messages = [];
+        setInterval(() => {
+            fetch('/getMsg/' + window.location.pathname.split('/')[2], {
+                method: 'GET',
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (messages !== data) {
+                        messages = data;
+                        renderData(messages);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }, 1000);
+
+        function renderData(data) {
+            const msgs = document.querySelector('.msgs');
+            msgs.innerHTML = ''; // clear previous messages
+            data.forEach(msg => {
+                const msgTemp = `
+          <div class='msg'>
+            <div class='sender'>${msg.from}</div>
+            <div class='value'>${msg.message}</div>
+          </div>
+        `;
+                msgs.insertAdjacentHTML('beforeend', msgTemp);
+            });
+        }
+
+        function submitHandler(e) {
+            e.preventDefault();
+            // console.log(e);
+
+            // message = document.getElementsByName('message').values
+            // to = document.getElementsByName('to').values
+            const formData = new FormData(event.target);
+            const url = '/send/';
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+            })
+                .then(response => response.json())
+                .then(data => console.log(data))
+                .catch(error => console.error('Error:', error));
 
 
-        // }
+        }
     </script>
 </body>
 
