@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+</head>
+
+<body>
+    {%for msg in massages%}
+    {{msg}}
+    {%endfor%}
+    {{user}}
+    <!-- <form action="send" onsubmit="onsubmit" method="post"></form>
+    {% csrf_token%}
+    <input type="text" name="massage" id="">
+    <input type="hidden" name="to" value="{{to}}">
+    <input type="submit" value="send">
+    </form> -->
+    <form method="POST" action="{% url 'send' %}" onsubmit="(e)=>onsubmit(e)">
+        {%csrf_token%}
+        <input type="text" name="massage">
+        <input type="hidden" name="to" value="{{to}}">
+        <input type="submit" value="send">
+    </form>
+    <script>
+        // function onsubmit(e) {
+        //     e.preventDefault();
+        //     message=document.getElementsByName('message').values
+        //     to=document.getElementsByName('to').values
+             
+
+
+        // }
+    </script>
+</body>
+
+</html>

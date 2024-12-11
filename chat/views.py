@@ -1,42 +1,70 @@
 from django.shortcuts import render, redirect
 from chat.models import Room, Message
 from django.http import HttpResponse, JsonResponse
+from django.contrib.auth import authenticate,login,logout,aauthenticate,alogin
+from django.contrib.auth.models import User
 
-# Create your views here.
-def home(request):
-    return render(request, 'home.html')
+def login(request):
+    if request.method=="POST": 
+        # print(request.POST['username'],request.POST['password'])
+        user=authenticate(request,username=request.POST['username'],password=request.POST['password'])
+        # print(dir(user))
+        if user is not None:
+            # print('user Exest',user)
+            login(request)
+            # print(help(login))
 
-def room(request, room):
-    username = request.GET.get('username')
-    room_details = Room.objects.get(name=room)
-    return render(request, 'room.html', {
-        'username': username,
-        'room': room,
-        'room_details': room_details
-    })
+            return 
+        # redirect('dashboard')
+        
+    return render(request,'login.html')
 
-def checkview(request):
-    room = request.POST['room_name']
-    username = request.POST['username']
+def dashboard(request):
+    print(request.user.is_authenticated)
+    if request.user.is_authenticated :
+        users=User.objects.all()
+        users=[user.username for user in User.objects.all()]
+        print(users)
+        return render(request,'dashboard.html',{'users':users})
+    return redirect('login')
 
-    if Room.objects.filter(name=room).exists():
-        return redirect('/'+room+'/?username='+username)
-    else:
-        new_room = Room.objects.create(name=room)
-        new_room.save()
-        return redirect('/'+room+'/?username='+username)
+def chat(request,to):
+     if request.user.is_authenticated :
+        recivers=User.objects.filter(username=to)
+        
+        # messages=Message.objects.filter(user=request.user,to=reciver)
+        for reciver in recivers:
+            # print(reciver.id)
+            messages=Message.objects.filter(to=reciver)
+            # print(messages)
+        return render(request,'chat.html',{'massages':[message for message in messages],'to':to})
 
-def send(request):
-    message = request.POST['message']
-    username = request.POST['username']
-    room_id = request.POST['room_id']
+def addMsg(request):
+    if request.user.is_authenticated:
+        to=request.POST["to"]
+        recivers=User.objects.filter(username=to)
+        for reciver in recivers:
+            massage=request.POST["massage"]
+            msg=Message(value=massage,froms=request.user,to=to)
+            msg.save()
+            print(massage)
+    
+   
 
-    new_message = Message.objects.create(value=message, user=username, room=room_id)
-    new_message.save()
-    return HttpResponse('Message sent successfully')
+    return HttpResponse({"success"})
 
-def getMessages(request, room):
-    room_details = Room.objects.get(name=room)
-
-    messages = Message.objects.filter(room=room_details.id)
-    return JsonResponse({"messages":list(messages.values())})
+def register(request):
+    if request.method=="POST": 
+        # print(request.POST['username'],request.POST['password'])
+        try :
+            user=User.objects.create_user(request.POST['username'],request.POST['password'])
+            user.save()
+            print(user)
+        except Exception as e:
+            return HttpResponse(e)
+        return redirect('login')
+    return render(request,'register.html')
+        
+def logout(req):
+    logout(req)
+    return redirect('login')
