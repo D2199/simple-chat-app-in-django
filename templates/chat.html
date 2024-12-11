@@ -8,10 +8,12 @@
 </head>
 
 <body>
+    {{user}}->{{to}}<br>
     {%for msg in massages%}
-    {{msg}}
+    {{msg.froms}}<br>
+<center>{{msg.value}}<br></center>
     {%endfor%}
-    {{user}}
+ 
     <!-- <form action="send" onsubmit="onsubmit" method="post"></form>
     {% csrf_token%}
     <input type="text" name="massage" id="">

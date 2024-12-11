@@ -3,19 +3,18 @@ from chat.models import Room, Message
 from django.http import HttpResponse, JsonResponse
 from django.contrib.auth import authenticate,login,logout,aauthenticate,alogin
 from django.contrib.auth.models import User
-
-def login(request):
+from django.db.models import Q
+def loginView(request):
     if request.method=="POST": 
         # print(request.POST['username'],request.POST['password'])
         user=authenticate(request,username=request.POST['username'],password=request.POST['password'])
         # print(dir(user))
         if user is not None:
             # print('user Exest',user)
-            login(request)
+            login(request,user)
             # print(help(login))
 
-            return 
-        # redirect('dashboard')
+            return redirect('dashboard')
         
     return render(request,'login.html')
 
@@ -33,11 +32,15 @@ def chat(request,to):
         recivers=User.objects.filter(username=to)
         
         # messages=Message.objects.filter(user=request.user,to=reciver)
-        for reciver in recivers:
-            # print(reciver.id)
-            messages=Message.objects.filter(to=reciver)
+        if len(recivers) >0:
+            messages=Message.objects.filter(
+        (Q(froms=request.user) & Q(to=recivers[0])) | 
+        (Q(froms=recivers[0]) & Q(to=request.user))
+    ).order_by('date')
+            print(messages[0].froms)
             # print(messages)
         return render(request,'chat.html',{'massages':[message for message in messages],'to':to})
+     return redirect('login')
 
 def addMsg(request):
     if request.user.is_authenticated:
@@ -45,7 +48,7 @@ def addMsg(request):
         recivers=User.objects.filter(username=to)
         for reciver in recivers:
             massage=request.POST["massage"]
-            msg=Message(value=massage,froms=request.user,to=to)
+            msg=Message(value=massage,froms=request.user,to=recivers[0])
             msg.save()
             print(massage)
     
@@ -65,6 +68,6 @@ def register(request):
         return redirect('login')
     return render(request,'register.html')
         
-def logout(req):
+def logoutView(req):
     logout(req)
     return redirect('login')
